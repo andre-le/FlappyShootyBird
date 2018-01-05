@@ -6,7 +6,9 @@ local scene = composer.newScene()
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
-
+local function goToMenu()
+    composer.gotoScene( "menu" )
+end
 
 
 
@@ -20,17 +22,27 @@ function scene:create( event )
     sceneGroup = self.view
 
     -- Code here runs when the scene is first created but has not yet appeared on screen
+
+    -- background
     local background = display.newImageRect( "background.png", 320, 580 )
     background.x = display.contentCenterX
     background.y = display.contentCenterY
     sceneGroup:insert( background )
 
+    --buttons
+    local menuButton = display.newText( sceneGroup, "Back To Menu", 50, 0, native.systemFontBold, 10 )
+    menuButton:addEventListener( "tap", goToMenu )
+
+    score = 0
+    currentScore = display.newText( sceneGroup, "" .. score, 100, 0, native.systemFontBold, 10 )
+
+    --ground
     local ground = display.newImageRect( "ground.png", 320, 50 )
     ground.x = display.contentCenterX
     ground.y = display.contentHeight
     sceneGroup:insert( ground )
 
-    bird = display.newImageRect( "flappy-bird.png", 112, 112 )
+    bird = display.newImageRect( "flappy-bird.png", 100, 100 )
     bird.x = display.contentCenterX
     bird.y = display.contentCenterY
     bird.myName = "bird"
@@ -45,7 +57,7 @@ function scene:create( event )
     --0...480
 
     physics.addBody( ground, "static" )
-    physics.addBody( bird, "dynamic", { radius=50, bounce=0.3 } )
+    physics.addBody( bird, "dynamic", { radius=40, bounce=0.3 } )
 
 
     wall()
@@ -53,7 +65,7 @@ function scene:create( event )
 
 
     local function tap()
-        bird:applyLinearImpulse( 0, -0.75, bird.x, bird.y )
+        bird:applyLinearImpulse( 0, -0.5, bird.x, bird.y )
         print("Y: " .. tostring(bird.y) .. " " .. tostring(display.contentHeight))
         -- tapCount = tapCount + 1
         -- tapText.text = tapCount
@@ -86,13 +98,13 @@ function collision(event)
             if (obj2.myName == "bird")
             then
                 bird.alpha = 0
-
+                composer.gotoScene("menu")
                 timer.performWithDelay( 1000, reset )
                 display.remove(obj1)
             elseif(obj1.myName == "bird")
             then
                 bird.alpha = 0
-                
+                composer.gotoScene("menu")
                 timer.performWithDelay( 1000, reset )
                 display.remove(obj2)
             else
@@ -126,8 +138,8 @@ function wall()
       stone.y = 50 * i
       stone.myName = "stone"
       sceneGroup:insert(stone)
-      physics.addBody( stone, "kinematic", { radius=25, bounce=0, isSensor=true } )
-      stone:setLinearVelocity( -10, 0 )
+      physics.addBody( stone, "kinematic", { radius=20, bounce=0, isSensor=true } )
+      stone:setLinearVelocity( -20, 0 )
     end
 end
 
@@ -135,6 +147,8 @@ end
 
 function gameLoop()
     shoot()
+    score = score + 1
+    currentScore.text = "" .. score
 end
 
 -- wallLoop()
@@ -144,7 +158,7 @@ function wallLoop()
 end
 
 function boundCheck()
-    if (bird.y < 0)
+    if (bird ~= nil and bird.y ~= nil and bird.y < 0)
     then
         bird.y = 0
         bird:setLinearVelocity( 0, 0 )
@@ -174,10 +188,14 @@ function scene:hide( event )
     local phase = event.phase
 
     if ( phase == "will" ) then
-        -- Code here runs when the scene is on screen (but is about to go off screen)
+        timer.cancel( gameLoopTimer1 )
+        timer.cancel( gameLoopTimer2 )
+        timer.cancel( gameLoopTimer3 )
 
     elseif ( phase == "did" ) then
-        -- Code here runs immediately after the scene goes entirely off screen
+        Runtime:removeEventListener( "collision", collision )
+        physics.pause()
+        composer.removeScene("playground")
 
     end
 end
@@ -200,9 +218,9 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 Runtime:addEventListener( "collision", collision )
-gameLoopTimer = timer.performWithDelay( 1000, gameLoop, 0 )
-gameLoopTimer = timer.performWithDelay( 10, boundCheck, 0 )
-gameLoopTimer = timer.performWithDelay( 20000, wallLoop, 0 )
+gameLoopTimer1 = timer.performWithDelay( 1000, gameLoop, 0 )
+gameLoopTimer2 = timer.performWithDelay( 10, boundCheck, 0 )
+gameLoopTimer3 = timer.performWithDelay( 15000, wallLoop, 0 )
 -- -----------------------------------------------------------------------------------
 
 return scene
