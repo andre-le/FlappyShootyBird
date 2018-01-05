@@ -6,10 +6,16 @@ local scene = composer.newScene()
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
-local function goToMenu()
-    composer.gotoScene( "menu" )
+-- takes the game to setting
+--local function gotoSettings()
+--    composer.gotoScene( "gamesettings" )
+--end
+
+-- takes the game to the playground
+local function playGame()
+    composer.gotoScene( "playground" )
 end 
- 
+
  
  
 -- -----------------------------------------------------------------------------------
@@ -21,52 +27,21 @@ function scene:create( event )
  
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
-    
-    -- backgroud
-    local background = display.newImageRect( "background.png", 320, 580 )
+    local background = display.newImageRect( sceneGroup, "background.png", 320, 580 )
     background.x = display.contentCenterX
     background.y = display.contentCenterY
-    sceneGroup:insert( background )
 
-    --buttons
-    local menuButton = display.newText( sceneGroup, "Back To Menu", 50, 0, native.systemFontBold, 10 )
-    menuButton:addEventListener( "tap", goToMenu )
+    --local title = display.newImageRect( sceneGroup, "title.png", 250, 25 ) -- assumes the title is 250x25
+    --title.x = display.contentCenterX
+    --title.y = 50
 
-    --ground
-    local ground = display.newImageRect( "ground.png", 320, 50 )
-    ground.x = display.contentCenterX
-    ground.y = display.contentHeight
-    sceneGroup:insert( ground )
+    local playButton = display.newText( sceneGroup, "Play!", display.contentCenterX, 160, native.systemFontBold, 20 )
+    playButton:addEventListener( "tap", playGame )
 
-    --bird
-    local bird = display.newImageRect( "flappy-bird.png", 112, 112 )
-    bird.x = display.contentCenterX
-    bird.y = display.contentCenterY
-    sceneGroup:insert( bird )
+    --local gameSettingsButton = display.newText( sceneGroup, "Settings", display.contentCenterX, 200, native.systemFontBold, 20 )
+    --gameSettingsButton:addEventListener( "tap", gotoSettings )
 
-    local physics = require( "physics" )
-    physics.start()
-
-    --0...480
-
-    physics.addBody( ground, "static" )
-    physics.addBody( bird, "dynamic", { radius=50, bounce=0.1 } )
-
-    local function tap()
-        bird:applyLinearImpulse( 0, -0.75, bird.x, bird.y )
-        print("Y: " .. tostring(bird.y) .. " " .. tostring(display.contentHeight))
-        -- tapCount = tapCount + 1
-        -- tapText.text = tapCount
-
-        if bird.y < 0 or bird.y > 480 then
-            print ("game over")
-        end
-    end
-
-    background:addEventListener( "tap", tap )
-    --bird:setLinearVelocity( 10, 0 )
 end
- 
  
 -- show()
 function scene:show( event )
@@ -79,7 +54,7 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-    
+ 
     end
 end
  
