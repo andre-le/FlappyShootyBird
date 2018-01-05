@@ -1,7 +1,8 @@
 local composer = require( "composer" )
  
 local scene = composer.newScene()
- 
+
+local bird
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -9,8 +10,34 @@ local scene = composer.newScene()
 local function goToMenu()
     composer.gotoScene( "menu" )
 end 
+
+local function tap()
+        bird:applyLinearImpulse( 0, -0.75, bird.x, bird.y )
+        print("Y: " .. tostring(bird.y) .. " " .. tostring(display.contentHeight))
+        -- tapCount = tapCount + 1
+        -- tapText.text = tapCount
+
+        if bird.y < 0 or bird.y > 480 then
+            print ("game over")
+        end
+    end
+
+local function fireLaser()
  
- 
+        local newLaser = display.newImageRect( "laser.png", 14, 40 )
+        physics.addBody( newLaser, "dynamic", { isSensor=true } )
+        newLaser.isBullet = true
+        newLaser.myName = "laser"
+     
+        newLaser.x = bird.x
+        newLaser.y = bird.y
+        --newLaser:toBack()
+     
+        transition.to( newLaser, { y = bird.y, x=320, time=700,
+            onComplete = function() display.remove( newLaser ) end
+        } )
+
+    end
  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -39,7 +66,7 @@ function scene:create( event )
     sceneGroup:insert( ground )
 
     --bird
-    local bird = display.newImageRect( "flappy-bird.png", 112, 112 )
+    bird = display.newImageRect( "flappy-bird.png", 112, 112 )
     bird.x = display.contentCenterX
     bird.y = display.contentCenterY
     sceneGroup:insert( bird )
@@ -52,19 +79,9 @@ function scene:create( event )
     physics.addBody( ground, "static" )
     physics.addBody( bird, "dynamic", { radius=50, bounce=0.1 } )
 
-    local function tap()
-        bird:applyLinearImpulse( 0, -0.75, bird.x, bird.y )
-        print("Y: " .. tostring(bird.y) .. " " .. tostring(display.contentHeight))
-        -- tapCount = tapCount + 1
-        -- tapText.text = tapCount
-
-        if bird.y < 0 or bird.y > 480 then
-            print ("game over")
-        end
-    end
-
     background:addEventListener( "tap", tap )
     --bird:setLinearVelocity( 10, 0 )
+
 end
  
  
@@ -79,7 +96,7 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-    
+        gameLoopTimer = timer.performWithDelay( 500, fireLaser, 0 )
     end
 end
  
@@ -92,7 +109,7 @@ function scene:hide( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
- 
+        timer.cancel( gameLoopTimer )
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
  
@@ -105,7 +122,7 @@ function scene:destroy( event )
  
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
+
 end
  
  
