@@ -3,6 +3,7 @@ local composer = require( "composer" )
 local scene = composer.newScene()
 
 local bird
+local bulletNum = 2
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -19,17 +20,20 @@ local function tap()
     end
 
 -- shoot()
-function shoot()
-    local bullet = display.newImageRect( "laser.png", 30 , 30)
-    bullet.x = bird.x
-    bullet.y = bird.y
-    bullet.isBullet = true
-    bullet.myName = "bullet"
-    sceneGroup:insert(bullet)
-    physics.addBody( bullet, "dynamic", { isSensor=true } )
-    transition.to( bullet, { y = bird.y, x=320, time=1000,
-        onComplete = function() display.remove( bullet ) end
-    } )
+function shoot(num)
+    for i = 1, num, 1
+    do
+        local bullet = display.newImageRect( "laser.png", 30 , 30)
+        bullet.x = bird.x
+        bullet.y = bird.y
+        bullet.isBullet = true
+        bullet.myName = "bullet"
+        sceneGroup:insert(bullet)
+        physics.addBody( bullet, "dynamic", { isSensor=true } )
+        transition.to( bullet, { y = bird.y, x=320, time=1000,
+            onComplete = function() display.remove( bullet ) end
+        } )
+    end
 end
 
 -- -----------------------------------------------------------------------------------
@@ -62,7 +66,7 @@ function scene:create( event )
     bird.myName = "bird"
     sceneGroup:insert( bird )
 
-    local physics = require( "physics" )
+    physics = require( "physics" )
     physics.start()
 
     physics.addBody( bird, "dynamic", { radius=40, bounce=0.3 } )
@@ -74,13 +78,23 @@ function scene:create( event )
     -- bird:setLinearVelocity( 10, 0 )
 end
 
--- reset()
-function reset()
-    transition.to( bird, { alpha=1, time=4000,
-        onComplete = function()
+-- gameover()
+function gameover()
+    bird.alpha = 0
+    composer.gotoScene("menu")
+end
 
-        end
-    })
+-- power(x, y)
+function power(x, y)
+    local powerup = display.newImageRect( "flappy-bird.png", 50 , 50)
+    powerup.x = x
+    powerup.y = y
+    powerup.myName = "powerup"
+    sceneGroup:insert(powerup)
+    physics.addBody( powerup, "kinematic", { radius=20, bounce=0, isSensor=true } )
+    transition.to( powerup, { y = y, x=-50, time=10000,
+        onComplete = function() display.remove( powerup ) end
+    } )
 end
 
 -- collision()
@@ -96,9 +110,7 @@ function collision(event)
             if ((obj2.myName == "bird") or
                 (obj1.myName == "bird"))
             then
-                bird.alpha = 0
-                composer.gotoScene("menu")
-                timer.performWithDelay( 1000, reset )
+                gameover()
             --in this case the bullet hit the stone
             else
                 if (obj2.score == 1) then
@@ -110,6 +122,13 @@ function collision(event)
                 end
                 display.remove(obj1)
             end
+        end
+
+        if (obj2.myName == "powerup" or obj1.myName == "powerup") and (obj2.myName == "bird" or obj1.myName == "bird")
+        then
+          bulletNum = bulletNum + 1
+          if(obj1.myName == "bird") then display.remove(obj2)
+          else display.remove(obj1) end
         end
     end
 end
@@ -128,24 +147,28 @@ function wall()
 
         --generate random score for stone
         stone.score = math.random(1,10)
-
+        if stone.score == 5 then power(stone.x, stone.y) end
         --display the score next to the stone
-        stone.scoreDisplay = display.newText( sceneGroup, stone.score, stone.x + 50, 
+        stone.scoreDisplay = display.newText( sceneGroup, stone.score, stone.x + 50,
             stone.y, native.systemFontBold, 20 )
         stone.scoreDisplay:setTextColor( 0, 0, 0 )
         stone.scoreDisplay.myName = "scoreDisplay"
 
         physics.addBody( stone, "kinematic", { radius=20, bounce=0, isSensor=true } )
-        stone:setLinearVelocity( -20, 0 )
+        transition.to( stone, { y = stone.y, x=-50, time=10000,
+            onComplete = function() display.remove( stone ) end
+        } )
         physics.addBody( stone.scoreDisplay, "kinematic", { radius=5})
-        stone.scoreDisplay:setLinearVelocity( -20, 0 )
+        transition.to( stone.scoreDisplay, { y = stone.scoreDisplay.y, x=0, time=10000,
+            onComplete = function() display.remove( stone.scoreDisplay ) end
+        } )
     end
 end
 
 -- gameLoop()
 
 function gameLoop()
-    shoot()
+    shoot(bulletNum)
     score = score + 1
     currentScore.text = "" .. score
 end
@@ -159,13 +182,7 @@ end
 function boundCheck()
     if (bird ~= nil and bird.y ~= nil and (bird.y < 0 or bird.y > 520))
     then
-        if (bird.y < 0)
-        then
-            bird.y = 0
-        else
-            bird.y = 520
-        end
-        bird:setLinearVelocity( 0, 0 )
+        gameover()
     end
 end
 
