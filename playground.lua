@@ -3,7 +3,9 @@ local composer = require( "composer" )
 local scene = composer.newScene()
 
 local bird
-local bulletNum = 2
+local bulletPow = 2
+local bulletSpeed = 1000
+math.randomseed(os.time())
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -13,15 +15,15 @@ local function goToMenu()
 end
 
 local function tap()
-        bird:applyLinearImpulse( 0, -0.75, bird.x, bird.y )
+        bird:applyLinearImpulse( 0, -0.5, bird.x, bird.y )
         -- tapCount = tapCount + 1
         -- tapText.text = tapCount
 
     end
 
 -- shoot()
-function shoot(num)
-    for i = 1, num, 1
+function shoot()
+    for i = 1, bulletPow, 1
     do
         local bullet = display.newImageRect( "laser.png", 30 , 30)
         bullet.x = bird.x
@@ -30,7 +32,7 @@ function shoot(num)
         bullet.myName = "bullet"
         sceneGroup:insert(bullet)
         physics.addBody( bullet, "dynamic", { isSensor=true } )
-        transition.to( bullet, { y = bird.y, x=320, time=1000,
+        transition.to( bullet, { y = bird.y, x=320, time=bulletSpeed,
             onComplete = function() display.remove( bullet ) end
         } )
     end
@@ -84,12 +86,11 @@ function gameover()
     composer.gotoScene("menu")
 end
 
--- power(x, y, type)
+-- power(x, y)
 function power(x, y)
     local powerup = display.newImageRect( "flappy-bird.png", 50 , 50)
     powerup.x = x
     powerup.y = y
-    powerup.type = type
     powerup.myName = "powerup"
     sceneGroup:insert(powerup)
     physics.addBody( powerup, "kinematic", { radius=20, bounce=0, isSensor=true } )
@@ -114,7 +115,7 @@ function collision(event)
                 gameover()
             --in this case the bullet hit the stone
             else
-                if (obj2.score == 1) then
+                if (obj2.score == 1 or bulletPow == -1) then
                     display.remove(obj2.scoreDisplay)
                     display.remove(obj2)
                 else
@@ -127,18 +128,20 @@ function collision(event)
 
         if (obj2.myName == "powerup" or obj1.myName == "powerup") and (obj2.myName == "bird" or obj1.myName == "bird")
         then
-          local type = 1
-          if(obj1.myName == "bird") then display.remove(obj2) type = obj2.type
-          else display.remove(obj1) type = obj1.type end
-          
-
+          local type = math.random(1,3)
+          print(type)
+          if type == 1 then bulletPow = bulletPow + 1
+          elseif type == 2 then bulletSpeed = bulletSpeed/2
+          elseif type == 3 then bulletPow = score end
+          if(obj1.myName == "bird") then display.remove(obj2)
+          else display.remove(obj1) end
         end
     end
 end
 
 -- wall()
 function wall()
-    math.randomseed(os.time())
+
 
     for i = 0, 7, 1
     do
@@ -171,7 +174,7 @@ end
 -- gameLoop()
 
 function gameLoop()
-    shoot(bulletNum)
+    shoot()
     score = score + 1
     currentScore.text = "" .. score
 end
