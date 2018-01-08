@@ -5,6 +5,7 @@ local scene = composer.newScene()
 local bird
 local bulletPow = 2
 local bulletSpeed = 1000
+local score = 0
 math.randomseed(os.time())
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -38,6 +39,10 @@ function shoot()
     end
 end
 
+-- Custom function for resuming the game (from pause state)
+function scene:resumeGame()
+    --code to resume game
+end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -59,7 +64,6 @@ function scene:create( event )
     local menuButton = display.newText( sceneGroup, "Back To Menu", 50, 0, native.systemFontBold, 10 )
     menuButton:addEventListener( "tap", goToMenu )
 
-    score = 0
     currentScore = display.newText( sceneGroup, "" .. score, 100, 0, native.systemFontBold, 10 )
 
     bird = display.newImageRect( "flappy-bird.png", 100, 100 )
@@ -83,7 +87,8 @@ end
 -- gameover()
 function gameover()
     bird.alpha = 0
-    composer.gotoScene("menu")
+    composer.setVariable( "finalScore", score )
+    composer.gotoScene( "highscores", { time=300, effect="fade" } )
 end
 
 -- power(x, y)
@@ -203,7 +208,6 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        --gameLoopTimer = timer.performWithDelay( 500, fireLaser, 0 )
         Runtime:addEventListener( "collision", collision )
         gameLoopTimer1 = timer.performWithDelay( 500, gameLoop, 0 )
         gameLoopTimer2 = timer.performWithDelay( 10, boundCheck, 0 )
