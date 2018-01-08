@@ -84,11 +84,12 @@ function gameover()
     composer.gotoScene("menu")
 end
 
--- power(x, y)
+-- power(x, y, type)
 function power(x, y)
     local powerup = display.newImageRect( "flappy-bird.png", 50 , 50)
     powerup.x = x
     powerup.y = y
+    powerup.type = type
     powerup.myName = "powerup"
     sceneGroup:insert(powerup)
     physics.addBody( powerup, "kinematic", { radius=20, bounce=0, isSensor=true } )
@@ -126,16 +127,18 @@ function collision(event)
 
         if (obj2.myName == "powerup" or obj1.myName == "powerup") and (obj2.myName == "bird" or obj1.myName == "bird")
         then
-          bulletNum = bulletNum + 1
-          if(obj1.myName == "bird") then display.remove(obj2)
-          else display.remove(obj1) end
+          local type = 1
+          if(obj1.myName == "bird") then display.remove(obj2) type = obj2.type
+          else display.remove(obj1) type = obj1.type end
+          
+
         end
     end
 end
 
 -- wall()
 function wall()
-            math.randomseed(os.time())
+    math.randomseed(os.time())
 
     for i = 0, 7, 1
     do
