@@ -13,9 +13,12 @@ local scene = composer.newScene()
 
 -- takes the game to the playground
 local function playGame()
-    composer.gotoScene( "playground" )
+    composer.gotoScene( "playground", { time=300, effect="fade" } )
 end 
 
+local function showHighScores()
+    composer.gotoScene( "highscores", { time=300, effect="fade" } )
+end
  
  
 -- -----------------------------------------------------------------------------------
@@ -37,7 +40,8 @@ function scene:create( event )
 
     local playButton = display.newText( sceneGroup, "Play!", display.contentCenterX, 160, native.systemFontBold, 20 )
     playButton:addEventListener( "tap", playGame )
-
+    local highscoresButton = display.newText( sceneGroup, "High Scores", display.contentCenterX, 200, native.systemFontBold, 20 )
+    highscoresButton:addEventListener( "tap", showHighScores )
     --local gameSettingsButton = display.newText( sceneGroup, "Settings", display.contentCenterX, 200, native.systemFontBold, 20 )
     --gameSettingsButton:addEventListener( "tap", gotoSettings )
 

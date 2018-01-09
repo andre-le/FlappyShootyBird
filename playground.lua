@@ -2,9 +2,12 @@ local composer = require( "composer" )
 
 local scene = composer.newScene()
 
+local buttonsGroup = display.newGroup()
+
 local bird
 local bulletPow = 2
-local bulletSpeed = 500
+local bulletSpeed = 1000
+local score = 0
 math.randomseed(os.time())
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -18,7 +21,6 @@ local function tap()
         bird:applyLinearImpulse( 0, -0.5, bird.x, bird.y )
         -- tapCount = tapCount + 1
         -- tapText.text = tapCount
-
     end
 
 -- shoot()
@@ -38,6 +40,21 @@ function shoot()
     end
 end
 
+-- pause()
+function pause()
+    physics.pause()
+    transition.pause()
+    timer.pause( gameLoopTimer1 )
+    composer.showOverlay( "pause", { isModal = true, time=300, effect="fade" } )
+end
+
+-- Custom function for resuming the game (from pause state)
+function scene:resumeGame()
+    --code to resume game
+    transition.resume()
+    physics.start()
+    timer.resume( gameLoopTimer1 )
+end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -59,8 +76,12 @@ function scene:create( event )
     local menuButton = display.newText( sceneGroup, "Back To Menu", 50, 0, native.systemFontBold, 10 )
     menuButton:addEventListener( "tap", goToMenu )
 
-    score = 0
-    currentScore = display.newText( sceneGroup, "" .. score, 100, 0, native.systemFontBold, 10 )
+
+    local pauseButton = display.newText( sceneGroup, "Pause", 120, 0, native.systemFontBold, 10 )
+    pauseButton:addEventListener( "tap", pause )
+    pauseButton:toFront()
+
+    currentScore = display.newText( sceneGroup, "" .. score, display.contentCenterX, 50, native.systemFontBold, 30 )
 
     bird = display.newImageRect( "flappy-bird.png", 100, 100 )
     bird.x = 16
@@ -77,13 +98,13 @@ function scene:create( event )
     wall()
 
     background:addEventListener( "tap", tap )
-    -- bird:setLinearVelocity( 10, 0 )
 end
 
 -- gameover()
 function gameover()
     bird.alpha = 0
-    composer.gotoScene("menu")
+    composer.setVariable( "finalScore", score )
+    composer.gotoScene( "highscores", { time=300, effect="fade" } )
 end
 
 -- power(x, y)
@@ -208,7 +229,6 @@ function scene:show( event )
 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        --gameLoopTimer = timer.performWithDelay( 500, fireLaser, 0 )
         Runtime:addEventListener( "collision", collision )
         gameLoopTimer1 = timer.performWithDelay( 500, gameLoop, 0 )
         gameLoopTimer2 = timer.performWithDelay( 10, boundCheck, 0 )
@@ -233,6 +253,7 @@ function scene:hide( event )
     elseif ( phase == "did" ) then
         Runtime:removeEventListener( "collision", collision )
         physics.pause()
+        transition.cancel()
         composer.removeScene("playground")
 
     end
