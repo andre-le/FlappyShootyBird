@@ -8,6 +8,12 @@ local bird
 local bulletPow = 2
 local bulletSpeed = 1000
 local score = 0
+
+-- variables to increase the game's dificulties
+local minWall = 1
+local maxWall = 10
+local turnNum = 0
+
 math.randomseed(os.time())
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -45,6 +51,7 @@ function pause()
     physics.pause()
     transition.pause()
     timer.pause( gameLoopTimer1 )
+    timer.pause( gameLoopTimer3 )
     composer.showOverlay( "pause", { isModal = true, time=300, effect="fade" } )
 end
 
@@ -54,6 +61,7 @@ function scene:resumeGame()
     transition.resume()
     physics.start()
     timer.resume( gameLoopTimer1 )
+    timer.resume( gameLoopTimer3 )
 end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -173,7 +181,7 @@ function wall()
         sceneGroup:insert(stone)
 
         --generate random score for stone
-        stone.score = math.random(1,10)
+        stone.score = math.random(minWall, maxWall)
         if stone.score == 5 then power(stone.x, stone.y) end
         --display the score next to the stone
         stone.scoreDisplay = display.newText( sceneGroup, stone.score, stone.x + 50,
@@ -196,13 +204,20 @@ end
 
 function gameLoop()
     shoot()
-    score = score + 1
-    currentScore.text = "" .. score
 end
 
 -- wallLoop()
 
 function wallLoop()
+    score = score + 1
+    currentScore.text = "" .. score
+    if turnNum == 3 then
+        minWall = minWall + 2
+        maxWall = maxWall + 2
+        turnNum = 0
+    else
+        turnNum = turnNum + 1
+    end
     wall()
 end
 
@@ -227,7 +242,7 @@ function scene:show( event )
         Runtime:addEventListener( "collision", collision )
         gameLoopTimer1 = timer.performWithDelay( 500, gameLoop, 0 )
         gameLoopTimer2 = timer.performWithDelay( 10, boundCheck, 0 )
-        gameLoopTimer3 = timer.performWithDelay( 15000, wallLoop, 0 )
+        gameLoopTimer3 = timer.performWithDelay( 10000, wallLoop, 0 )
     end
 end
 
