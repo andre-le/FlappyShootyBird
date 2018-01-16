@@ -40,7 +40,7 @@ function shoot()
         bullet.myName = "bullet"
         sceneGroup:insert(bullet)
         physics.addBody( bullet, "dynamic", { isSensor=true } )
-        transition.to( bullet, { y = bird.y, x=320, time=bulletSpeed,
+        transition.to( bullet, { y = bird.y, x=320, time=1000,
             onComplete = function() display.remove( bullet ) end
         } )
     end
@@ -200,6 +200,12 @@ function wall()
     end
 end
 
+-- shootLoop()
+
+function shootLoop()
+    shoot()
+end
+
 -- gameLoop()
 
 function gameLoop()
@@ -242,7 +248,8 @@ function scene:show( event )
         Runtime:addEventListener( "collision", collision )
         gameLoopTimer1 = timer.performWithDelay( 500, gameLoop, 0 )
         gameLoopTimer2 = timer.performWithDelay( 10, boundCheck, 0 )
-        gameLoopTimer3 = timer.performWithDelay( 10000, wallLoop, 0 )
+        gameLoopTimer3 = timer.performWithDelay( 15000, wallLoop, 0 )
+        gameLoopTimer4 = timer.performWithDelay( bulletSpeed, shootLoop, 0 )
     end
 end
 
@@ -257,6 +264,7 @@ function scene:hide( event )
         timer.cancel( gameLoopTimer1 )
         timer.cancel( gameLoopTimer2 )
         timer.cancel( gameLoopTimer3 )
+        timer.cancel( gameLoopTimer4 )
 
     elseif ( phase == "did" ) then
         Runtime:removeEventListener( "collision", collision )
